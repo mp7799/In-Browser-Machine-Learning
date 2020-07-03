@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="flutter_linear_regression">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/png" href="favicon.png" />
+
+  <title>flutter_linear_regression</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+  <!-- This script installs service_worker.js to provide PWA functionality to
+       application. For more information, see:
+       https://developers.google.com/web/fundamentals/primers/service-workers -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('flutter_service_worker.js');
+      });
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script lang="js">
+
+    var xs = [];
+    var ys = [];
+    var epochs = 0;
+
+    x = [];
+    y = [];
+
+    const loss = [];
+    const model = tf.sequential();
+
+    async function startTraining(model) {
+      const history =
+        await model.fit(x, y, {
+          epochs: epochs,
+          callbacks: {
+            onEpochEnd: (epoch, logs) => {
+              console.log("Epoch: " + epoch + " Loss: " + logs.loss);
+              loss.push(logs.loss);
+            }
+          }
+        });
+    }
+
+    function pushToXS(n) {
+      xs.push(n);
+    }
+
+    function removeLastXS(n){
+      xs.pop();
+    }
+
+    function pushToYS(n) {
+      ys.push(n);
+    }
+
+    function removeLastYS(n){
+      ys.pop();
+    }
+
+    function transformInput(){
+        x = tf.tensor2d(xs, [xs.length,1]);
+        y = tf.tensor2d(ys, [ys.length,1]);
+    }
+
+    function setEpochs(n){
+      epochs = n;
+    }
+
+    async function makeModel() {
+      transformInput();
+      model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
+      model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
+    }
+
+    async function executeFunc() {
+      makeModel();
+      await startTraining(model);
+    }
+
+    async function consolePrint() {
+      await executeFunc().then(() => {
+        alert("Model Successfully Trained...You can now make predictions..");
+      });
+    }
+
+    function prediction(n){
+      var num = tf.tensor2d([n], [1,1]);
+      var x = model.predict(num);
+      var result = x.dataSync();
+      return result[0];
+    }
+
+    // async function f() {
+    //   let promise = new Promise((resolve, reject) => {
+    //     resolve((model.fit(xs, ys, {
+    //       epochs: 100,
+    //       callbacks: {
+    //         onEpochEnd: (epoch, logs) => {
+    //           console.log("Epoch: " + epoch + " Loss: " + logs.loss);
+    //           loss.push(logs.loss);
+    //         }
+    //       }
+    //     }).then(()=>{
+    //       return "Done";
+    //     })))
+    //   });
+
+    //   let result = await promise; // wait until the promise resolves (*)
+
+    //   alert(result); // "done!"
+    // }
+
+    // makeModel();
+    // f();
+  </script>
+  <script src="main.dart.js" type="application/javascript"></script>
+</body>
+
+</html>
